@@ -25,14 +25,12 @@ const ROOT_DIR = 'chaicode';
 let projectType: string | undefined;
 let projectName: string | undefined;
 
-// Ensure root directory exists
 const ensureRootDir = () => {
   if (!fs.existsSync(ROOT_DIR)) {
     fs.mkdirSync(ROOT_DIR, { recursive: true });
   }
 };
 
-// Normalize paths to prevent nested chaicode folders
 const normalizePath = (filePath: string): string => {
   const normalized = path.normalize(filePath).replace(/\\/g, '/');
   const parts = normalized.split('/').filter(part => part);
@@ -61,7 +59,6 @@ const showSpinner = async (message: string, duration: number): Promise<void> => 
   });
 };
 
-// Animation after user approves structure
 const showApprovalAnimation = async (): Promise<void> => {
   const frames = ['🎉', '🎈', '🎊', '🎁', '🎉', '🎈', '🎊', '🎁'];
   let i = 0;
@@ -81,7 +78,6 @@ const showApprovalAnimation = async (): Promise<void> => {
   });
 };
 
-// Generate content for execute.md
 const generateExecuteMdContent = (projectType: string, projectName: string): string => {
   let content = `# Execution Instructions for ${projectName}\n\n`;
   content += `This document provides detailed instructions on how to run your ${projectType} project, along with necessary dependencies, compatibility information, and potential issues you might encounter.\n\n`;
@@ -125,7 +121,6 @@ const generateExecuteMdContent = (projectType: string, projectName: string): str
   return content;
 };
 
-// Display celebratory message with reference to execute.md
 const showSuccessAnimation = () => {
   const asciiArt = `
   ${chalk.green('============================================')}
@@ -145,7 +140,6 @@ const showSuccessAnimation = () => {
   console.log(chalk.cyan('============================================'));
 };
 
-// Read directory contents
 const readDirectory = (dirPath: string = ROOT_DIR) => {
   try {
     ensureRootDir();
@@ -175,7 +169,6 @@ const readDirectory = (dirPath: string = ROOT_DIR) => {
   }
 };
 
-// Create or update a file with content
 const createDynamicFile = (args: { fileName: string; content: string }) => {
   try {
     ensureRootDir();
@@ -203,7 +196,6 @@ const createDynamicFile = (args: { fileName: string; content: string }) => {
   }
 };
 
-// Generate project structure with execute.md
 const generateProjectStructure = async (projectType: string, description: string): Promise<string> => {
   const prompt = `Generate a JSON object representing the folder and file structure for a ${projectType} project that ${description}. Keep the structure minimal and appropriate for the project type (e.g., a simple HTML project should only have essential files like index.html, style.css, and script.js; a Python script should avoid unnecessary folders like src/ or tests/ unless explicitly needed). Include all necessary files and folders with their relative paths inside the "${ROOT_DIR}" directory. Always include a "README.md" file for project details and an "execute.md" file for execution instructions. Return only the JSON object with a "structure" array. Example for an HTML project:
   {
@@ -249,18 +241,15 @@ const generateProjectStructure = async (projectType: string, description: string
   }
 };
 
-// Generate file content with beautiful UI for web projects
 const generateFileContent = async (filePath: string, projectType: string, description: string, isUpdate: boolean = false, updateIssue?: string): Promise<string> => {
   const normalizedFilePath = normalizePath(filePath);
   const fileType = path.extname(filePath).slice(1) || path.basename(filePath);
   let prompt = `Generate production-ready content for a ${fileType} file at "${normalizedFilePath}" in a ${projectType} project that ${description}. Follow best practices (e.g., modular code, error handling, comments). For config files, include sensible defaults. For source files, include necessary imports/exports. Return ONLY the file content.`;
 
-  // Handle execute.md content
   if (fileType === 'md' && normalizedFilePath.endsWith('execute.md')) {
     return generateExecuteMdContent(projectType, projectName || 'unknown');
   }
 
-  // For web-related files (HTML, React, etc.), apply the UI design guidelines
   if (fileType === 'html' || projectType.toLowerCase().includes('react') || projectType.toLowerCase().includes('web')) {
     prompt = `You are an expert UI developer specializing in creating beautiful, production-ready web interfaces. Your task is to generate a ${fileType} file at "${normalizedFilePath}" for a ${projectType} project that ${description}. Follow these guidelines to ensure a visually appealing and functional UI:
 
@@ -303,7 +292,7 @@ const generateFileContent = async (filePath: string, projectType: string, descri
        - Use responsive classes (e.g., sm:, md:)
     4. Asset Handling:
        - For icons: Use FontAwesome via CDN (e.g., <i class="fas fa-plus"></i>)
-       - For images: Use Pexels (e.g., https://images.pexels.com/photos/123456/pexels-photo-123456.jpeg?auto=compress&cs=tinysrgb&w=600) or fallback to https://placehold.co/600x400
+       - For images: Use Pexels or Unsplash (e.g., https://images.pexels.com/photos/123456/pexels-photo-123456.jpeg?auto=compress&cs=tinysrgb&w=600) or fallback to https://placehold.co/600x400
        - Include alt text for accessibility
     5. Responsive Design:
        - Use a mobile-first approach
@@ -342,7 +331,6 @@ const generateFileContent = async (filePath: string, projectType: string, descri
   }
 };
 
-// Present structure to user and get confirmation
 const presentStructure = async (structure: string[]): Promise<boolean> => {
   return new Promise(resolve => {
     console.log(chalk.cyan('========= Proposed Project Structure ========='));
@@ -502,7 +490,6 @@ async function runAgent(userMsg: string) {
       }
 
       if (dataObj.step === 'analyze') {
-        // Extract project type and name for execution instructions
         const typeMatch = dataObj.content.match(/identified as an? ([\w\s]+)\./);
         const nameMatch = dataObj.content.match(/I'll name it '([^']+)'/) || dataObj.content.match(/Found project '([^']+)'/);
         if (typeMatch) projectType = typeMatch[1];
@@ -612,7 +599,6 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-// Process user input
 async function processInput(input: string): Promise<void> {
   const inputLower = input.toLowerCase().trim();
   if (inputLower === 'exit' || inputLower === 'quit') {
@@ -630,7 +616,6 @@ async function processInput(input: string): Promise<void> {
   await runAgent(input);
 }
 
-// Show help message
 function showHelp(): void {
   console.log(chalk.cyan('========= Cursor2.0 Terminal Help ========='));
   console.log(chalk.white('📜 Welcome to the Cursor2.0 Terminal Agent!'));
@@ -652,7 +637,6 @@ function showHelp(): void {
   rl.prompt();
 }
 
-// Main function
 async function main(): Promise<void> {
   console.log(chalk.cyan('========= Welcome to Cursor2.0 Terminal ========='));
   console.log(chalk.white('🌟 Create amazing projects with ease!'));
